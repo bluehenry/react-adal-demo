@@ -1,39 +1,46 @@
 import React, { Component } from 'react';
-import { adalApiFetch } from './adalConfig';
+import { authContext, adalConfig } from './adalConfig';
+import { runWithAdal } from 'react-adal';
+
+const DO_NOT_LOGIN = false;
 
 class App extends Component {
 
   state = {
-    apiResponse: ''
+    username: ''
   };
 
   componentDidMount() {
 
-    // We're using Fetch as the method to be called, and the /me endpoint 
-    // from Microsoft Graph as the REST API request to make.
-    adalApiFetch(fetch, 'https://localhost:3000', {})
-      .then((response) => {
-
-        // This is where you deal with your API response. In this case, we            
-        // interpret the response as JSON, and then call `setState` with the
-        // pretty-printed JSON-stringified object.
-        response.json()
-          .then((responseJson) => {
-            this.setState({ apiResponse: JSON.stringify(responseJson, null, 2) })
-          });
-      })
-      .catch((error) => {
-
-        // Don't forget to handle errors!
-        console.error(error);
-      })
+    runWithAdal(authContext, () => {
+      // TODO : continue your process
+      var user = authContext.getCachedUser();
+      if (user) {        
+        console.log(user);
+        console.log(user.userName);
+        this.setState({ username: user.userName });        
+      }
+      else {
+          // Initiate login
+          // authContext.login();        
+        console.log('getCachedUser() error');
+      }
+  
+      var token = authContext.getCachedToken(adalConfig.clientId)
+      if (token) {        
+        console.log(token);
+      }
+      else {        
+        console.log('getCachedToken() error');       
+      }
+     }, DO_NOT_LOGIN);
   }
 
   render() {
     return (
       <div>
-        <p>API response:</p>
-        <pre>{ this.state.apiResponse }</pre>
+        <p>username:</p>
+        <pre>{ this.state.username }</pre>
       </div>
     );
   }
